@@ -22,9 +22,45 @@ st.markdown("""
 /* General background - Light Theme */
 [data-testid="stAppViewContainer"] { background: #f5f7fa; }
 [data-testid="stSidebar"] { background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%); }
-[data-testid="stSidebar"] * { color: #ffffff !important; }
-[data-testid="stSidebar"] .stSelectbox label,
-[data-testid="stSidebar"] .stTextInput label { color: #dbeafe !important; font-size: 0.8rem; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+
+/* Sidebar – headings, plain text, labels → white */
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] span,
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] h4,
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] .stMarkdown { color: #ffffff !important; }
+
+/* Sidebar filter labels uppercase */
+[data-testid="stSidebar"] label {
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #dbeafe !important;
+}
+
+/* Selectbox & multiselect input box – white background, dark text */
+[data-testid="stSidebar"] [data-baseweb="select"] > div,
+[data-testid="stSidebar"] [data-baseweb="select"] input {
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+    border-radius: 8px !important;
+    border: none !important;
+}
+
+/* The currently selected value inside selectbox */
+[data-testid="stSidebar"] [data-baseweb="select"] [data-testid="stMarkdownContainer"] p,
+[data-testid="stSidebar"] [data-baseweb="select"] span,
+[data-testid="stSidebar"] [data-baseweb="select"] div[class*="placeholder"],
+[data-testid="stSidebar"] [data-baseweb="select"] div[class*="singleValue"] {
+    color: #1e293b !important;
+}
+
+/* Dropdown arrow icon */
+[data-testid="stSidebar"] [data-baseweb="select"] svg { fill: #1e293b !important; }
 
 /* Metric cards */
 div[data-testid="metric-container"] {
