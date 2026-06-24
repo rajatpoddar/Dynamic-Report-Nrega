@@ -306,31 +306,39 @@ if uploaded_file:
             )
             fig_pie.update_layout(margin=dict(t=10, b=10), legend_font_size=11)
             st.plotly_chart(fig_pie, width='stretch')
+        elif len(wc) == 1:
+            st.info(f"Only one type: **{wc['Work_Type'].values[0]}**")
         else:
-            st.info(f"Only one type: **{wc['Work_Type'].iloc[0]}**")
+            st.info("No data available for selected filters.")
 
     with cc2:
         st.markdown("#### 📅 Schemes by Financial Year")
         fy = df_filtered["Fin_Year"].value_counts().reset_index().sort_values("Fin_Year")
         fy.columns = ["Fin_Year", "Count"]
-        fig_bar = px.bar(
-            fy, x="Fin_Year", y="Count", text="Count",
-            color="Fin_Year", color_discrete_sequence=px.colors.sequential.Blues_r,
-        )
-        fig_bar.update_layout(showlegend=False, margin=dict(t=10, b=10))
-        st.plotly_chart(fig_bar, width='stretch')
+        if not fy.empty:
+            fig_bar = px.bar(
+                fy, x="Fin_Year", y="Count", text="Count",
+                color="Fin_Year", color_discrete_sequence=px.colors.sequential.Blues_r,
+            )
+            fig_bar.update_layout(showlegend=False, margin=dict(t=10, b=10))
+            st.plotly_chart(fig_bar, width='stretch')
+        else:
+            st.info("No data for selected filters.")
 
     # ── Charts Row 2 ─────────────────────────────────────────
     cc3, cc4 = st.columns(2)
     with cc3:
         st.markdown("#### 📍 Panchayat-wise Works Count")
         pw = df_filtered.groupby("Panchayat").size().reset_index(name="Count").sort_values("Count", ascending=True)
-        fig_pwh = px.bar(
-            pw, x="Count", y="Panchayat", orientation="h", text="Count",
-            color="Count", color_continuous_scale="Blues",
-        )
-        fig_pwh.update_layout(margin=dict(t=10, b=10), coloraxis_showscale=False)
-        st.plotly_chart(fig_pwh, width='stretch')
+        if not pw.empty:
+            fig_pwh = px.bar(
+                pw, x="Count", y="Panchayat", orientation="h", text="Count",
+                color="Count", color_continuous_scale="Blues",
+            )
+            fig_pwh.update_layout(margin=dict(t=10, b=10), coloraxis_showscale=False)
+            st.plotly_chart(fig_pwh, width='stretch')
+        else:
+            st.info("No data for selected filters.")
 
     with cc4:
         st.markdown("#### 💰 Sanctioned vs Paid Amount (by Panchayat)")
@@ -338,21 +346,27 @@ if uploaded_file:
             Sanctioned=("Sanctioned_Amount", "sum"),
             Paid=("Total_Paid", "sum")
         ).reset_index()
-        fig_amt = go.Figure()
-        fig_amt.add_trace(go.Bar(name="Sanctioned", x=amt["Panchayat"], y=amt["Sanctioned"], marker_color="#3b6fd4"))
-        fig_amt.add_trace(go.Bar(name="Paid", x=amt["Panchayat"], y=amt["Paid"], marker_color="#43c59e"))
-        fig_amt.update_layout(barmode="group", margin=dict(t=10, b=10), legend_font_size=11)
-        st.plotly_chart(fig_amt, width='stretch')
+        if not amt.empty:
+            fig_amt = go.Figure()
+            fig_amt.add_trace(go.Bar(name="Sanctioned", x=amt["Panchayat"], y=amt["Sanctioned"], marker_color="#3b6fd4"))
+            fig_amt.add_trace(go.Bar(name="Paid", x=amt["Panchayat"], y=amt["Paid"], marker_color="#43c59e"))
+            fig_amt.update_layout(barmode="group", margin=dict(t=10, b=10), legend_font_size=11)
+            st.plotly_chart(fig_amt, width='stretch')
+        else:
+            st.info("No data for selected filters.")
 
     # ── Progress Distribution ─────────────────────────────────
     st.markdown("#### 🎯 Progress % Distribution Across Works")
-    fig_hist = px.histogram(
-        df_filtered, x="Progress_%", nbins=20,
-        color_discrete_sequence=["#3b6fd4"],
-        labels={"Progress_%": "Progress (%)"},
-    )
-    fig_hist.update_layout(margin=dict(t=10, b=10))
-    st.plotly_chart(fig_hist, width='stretch')
+    if not df_filtered.empty:
+        fig_hist = px.histogram(
+            df_filtered, x="Progress_%", nbins=20,
+            color_discrete_sequence=["#3b6fd4"],
+            labels={"Progress_%": "Progress (%)"},
+        )
+        fig_hist.update_layout(margin=dict(t=10, b=10))
+        st.plotly_chart(fig_hist, width='stretch')
+    else:
+        st.info("No data for selected filters.")
 
     st.markdown("---")
 
