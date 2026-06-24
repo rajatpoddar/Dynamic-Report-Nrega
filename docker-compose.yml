@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  schemes-dashboard:
+    build: .
+    container_name: schemes_dashboard
+    ports:
+      - "3737:3737"
+    restart: unless-stopped
