@@ -162,8 +162,12 @@ def progress_badge(p):
 # ─────────────────────────────────────────────
 def export_excel(dataframe: pd.DataFrame, sheet_name: str = "Report") -> bytes:
     output = BytesIO()
+    # Add S.No. column
+    df_export = dataframe.reset_index(drop=True).copy()
+    df_export.insert(0, "S.No.", range(1, len(df_export) + 1))
+
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        dataframe.to_excel(writer, index=False, sheet_name=sheet_name)
+        df_export.to_excel(writer, index=False, sheet_name=sheet_name)
         workbook = writer.book
         worksheet = writer.sheets[sheet_name]
 
@@ -176,40 +180,45 @@ def export_excel(dataframe: pd.DataFrame, sheet_name: str = "Report") -> bytes:
         pct_fmt = workbook.add_format({"num_format": "0.00\"%\"", "border": 1})
         text_fmt = workbook.add_format({"border": 1, "font_size": 9})
         alt_fmt = workbook.add_format({"border": 1, "font_size": 9, "bg_color": "#f0f4ff"})
+        sno_fmt = workbook.add_format({"border": 1, "align": "center", "font_size": 9, "bold": True})
+        sno_alt_fmt = workbook.add_format({"border": 1, "align": "center", "font_size": 9, "bold": True, "bg_color": "#f0f4ff"})
 
         # Column widths
         col_widths = {
+            "S.No.": 6,
             "Work_Code": 18, "Panchayat": 20, "Work_Name": 40, "Work_Type": 22,
             "Fin_Year": 12, "Work_Status": 15, "Sanctioned_Amount": 18,
             "Wages_Paid": 15, "Material_Paid": 15, "Total_Paid": 15, "Progress_%": 14
         }
-        for i, col in enumerate(dataframe.columns):
+        for i, col in enumerate(df_export.columns):
             w = col_widths.get(col, 16)
             worksheet.set_column(i, i, w)
 
         # Header row
-        for col_num, col_name in enumerate(dataframe.columns):
+        for col_num, col_name in enumerate(df_export.columns):
             worksheet.write(0, col_num, col_name, header_fmt)
         worksheet.set_row(0, 22)
 
         # Data rows with alternating colour
         money_cols = {"Sanctioned_Amount", "Wages_Paid", "Material_Paid", "Total_Paid"}
         pct_cols = {"Progress_%"}
-        col_list = list(dataframe.columns)
-        for row_num, row in enumerate(dataframe.itertuples(index=False), start=1):
-            base_fmt = alt_fmt if row_num % 2 == 0 else text_fmt
+        col_list = list(df_export.columns)
+        for row_num, row in enumerate(df_export.itertuples(index=False), start=1):
+            is_alt = row_num % 2 == 0
             for col_num, col_name in enumerate(col_list):
-                val = row[col_num]   # positional – avoids getattr issues with special chars like %
-                if col_name in money_cols:
+                val = row[col_num]
+                if col_name == "S.No.":
+                    worksheet.write_number(row_num, col_num, int(val), sno_alt_fmt if is_alt else sno_fmt)
+                elif col_name in money_cols:
                     worksheet.write_number(row_num, col_num, float(val), num_fmt)
                 elif col_name in pct_cols:
                     worksheet.write_number(row_num, col_num, float(val), pct_fmt)
                 else:
-                    worksheet.write(row_num, col_num, str(val), base_fmt)
+                    worksheet.write(row_num, col_num, str(val), alt_fmt if is_alt else text_fmt)
 
         # Freeze pane & autofilter
         worksheet.freeze_panes(1, 0)
-        worksheet.autofilter(0, 0, len(dataframe), len(dataframe.columns) - 1)
+        worksheet.autofilter(0, 0, len(df_export), len(df_export.columns) - 1)
 
     return output.getvalue()
 
@@ -304,7 +313,12 @@ if uploaded_file:
                 wc, names="Work_Type", values="Count", hole=0.42,
                 color_discrete_sequence=px.colors.qualitative.Pastel,
             )
-            fig_pie.update_layout(margin=dict(t=10, b=10), legend_font_size=11)
+            fig_pie.update_traces(
+                texttemplate="<b>%{label}</b><br>%{value} works<br>(%{percent})",
+                textposition="outside",
+                hovertemplate="<b>%{label}</b><br>Count: %{value}<br>Share: %{percent}<extra></extra>",
+            )
+            fig_pie.update_layout(margin=dict(t=10, b=10), legend_font_size=11, showlegend=True)
             st.plotly_chart(fig_pie, width='stretch')
         elif len(wc) == 1:
             st.info(f"Only one type: **{wc['Work_Type'].values[0]}**")
