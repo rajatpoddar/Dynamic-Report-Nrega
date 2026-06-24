@@ -1,66 +1,72 @@
-# 📊 Schemes & Works Dynamic Dashboard
+# 📊 MGNREGA Schemes & Works Dynamic Dashboard
 
-A professional, interactive dashboard for visualizing and analyzing MGNREGA (Mahatma Gandhi National Rural Employment Guarantee Act) schemes and works data. Upload your Excel or CSV reports to generate dynamic insights instantly.
+A professional, interactive Streamlit dashboard for analyzing MGNREGA scheme data with advanced search, analytics, and Excel export capabilities.
 
-## Features
+## ✨ Features
 
-✨ **Key Features:**
-- 📤 **Easy File Upload** - Upload Excel (.xlsx) or CSV files with a single click
-- 📈 **Interactive Charts** - Dynamic Plotly visualizations including pie charts and distribution graphs
-- 🔍 **Advanced Filtering** - Filter data by Panchayat and Scheme Type
-- 📊 **KPI Metrics** - Real-time Key Performance Indicators including:
-  - Total Works Count
-  - Zero Paid Works Tracking
-  - Critical Progress (<10%) Detection
-  - Near Completion Works (>85%)
-- 📋 **Detailed Data Tables** - Organized data with comprehensive columns including work code, sanctioned amounts, wages paid, and progress percentage
-- 🎨 **Modern UI** - Clean, professional interface with custom styling
-- 🐳 **Docker Support** - Easy containerized deployment
+### 🔍 Smart Search
+- **Live search** by Work Name or Work Code (partial text supported)
+- **Instant shortlisting** with color-coded progress indicators
+- **Individual work analytics** with detailed insights
 
-## Data Fields Tracked
+### 📈 Analytics & Visualizations
+- **KPI Cards**: Total works, zero paid, critical & near-completion counts
+- **Work Type Distribution**: Interactive pie charts
+- **Financial Year Analysis**: Bar charts showing old vs new schemes
+- **Panchayat-wise Breakdown**: Horizontal bar charts & comparisons
+- **Progress Distribution**: Histogram showing work progress spread
+- **Budget Utilisation**: Sanctioned vs Paid comparisons
 
-The dashboard extracts and analyzes the following metrics from your reports:
-- **Work Code** - Unique identifier for each work
-- **Panchayat** - Administrative division
-- **Work Name** - Description of the work
-- **Work Type** - Category/Scheme type
-- **Financial Year** - Fiscal year of the scheme
-- **Work Status** - Current status of the work
-- **Sanctioned Amount** - Approved budget
-- **Wages Paid** - Wages disbursed
-- **Material Paid** - Material costs disbursed
-- **Total Paid** - Combined wages and material payments
-- **Progress %** - Percentage of completion based on payments
+### 🎯 Individual Work Analytics
+When you search and select a specific work, you get:
+- **Progress Gauge**: Visual indicator with color zones
+- **Expenditure Breakdown**: Wages, Material, and Remaining budget pie chart
+- **Panchayat Comparison**: How this work compares to panchayat average
+- **Budget Utilisation**: Real-time utilisation percentage
 
-## Technologies Used
+### 📥 Professional Export
+- **Formatted Excel Export** (not basic CSV!)
+  - Styled headers with dark navy background
+  - Alternating row colors for readability
+  - Auto-formatted currency columns (₹ symbol, comma separators)
+  - Percentage columns with % format
+  - Frozen header row & auto-filter enabled
+  - Column width optimization
+- **Per-tab export** available on each report view
 
-- **Streamlit** - Web application framework for Python
-- **Pandas** - Data manipulation and analysis
-- **Plotly Express** - Interactive data visualization
-- **OpenPyXL** - Excel file handling
-- **Python 3.10** - Programming language
-- **Docker** - Containerization
+### 🔎 Advanced Filters
+- Panchayat
+- Work Type / Scheme
+- Financial Year
+- Work Status
 
-## Installation
+### 📋 Detailed Reports (Tabs)
+- **All Schemes**: Complete dataset
+- **Zero Paid**: Works with no payment yet
+- **Low Progress**: Works below 10% completion
+- **High Progress**: Works above 85% completion
+- **Old Schemes**: Historical financial years
+- **Material Oriented**: Works with material expenditure
 
-### Prerequisites
-- Python 3.10 or higher
-- pip package manager
-- (Optional) Docker and Docker Compose
+## 🚀 Quick Start
 
-### Local Setup
+### Using Virtual Environment (Recommended)
 
-1. **Clone or download the project**
+1. **Clone the repository**
    ```bash
-   cd dynamic_report
+   git clone https://github.com/rajatpoddar/Dynamic-Report-Nrega.git
+   cd Dynamic-Report-Nrega
    ```
 
-2. **Create a virtual environment (recommended)**
+2. **Create and activate virtual environment**
    ```bash
+   # Windows
    python -m venv venv
-   source venv/Scripts/activate  # On Windows
-   # or
-   source venv/bin/activate      # On macOS/Linux
+   venv\Scripts\activate
+   
+   # Linux/Mac
+   python3 -m venv venv
+   source venv/bin/activate
    ```
 
 3. **Install dependencies**
@@ -68,128 +74,112 @@ The dashboard extracts and analyzes the following metrics from your reports:
    pip install -r requirements.txt
    ```
 
-## Usage
-
-### Running Locally
-
-1. **Start the Streamlit application**
+4. **Run the app**
    ```bash
-   streamlit run app.py
+   streamlit run app.py --server.port=3737
    ```
 
-2. **Access the dashboard**
-   - Open your browser and navigate to `http://localhost:8501`
+5. **Open in browser**
+   ```
+   http://localhost:3737
+   ```
 
-3. **Upload your data**
-   - Click on "Drop your Excel or CSV file here"
-   - Select your MGNREGA report file (Excel or CSV format)
-   - The dashboard will automatically process and display your data
+### Using Docker
 
-4. **Apply Filters**
-   - Use the sidebar to filter by Panchayat
-   - Filter by Scheme Type to focus on specific work categories
-   - View updated metrics and charts in real-time
-
-### Running with Docker
-
-1. **Build and run the Docker container**
+1. **Build and run**
    ```bash
    docker-compose up --build
    ```
 
-2. **Access the dashboard**
-   - Open your browser and navigate to `http://localhost:3737`
-
-3. **Stop the container**
-   ```bash
-   docker-compose down
+2. **Access**
+   ```
+   http://localhost:3737
    ```
 
-## File Structure
+## 📂 File Structure
 
 ```
-dynamic_report/
-├── app.py                    # Main Streamlit application
-├── requirements.txt          # Python dependencies
-├── Dockerfile               # Docker image configuration
-├── docker-compose.yml       # Docker Compose configuration
-└── README.md               # This file
+.
+├── app.py              # Main Streamlit application
+├── requirements.txt    # Python dependencies
+├── Dockerfile          # Docker configuration
+├── docker-compose.yml  # Docker Compose setup
+├── .dockerignore       # Docker ignore rules
+├── .gitignore          # Git ignore rules
+└── README.md           # This file
 ```
 
-## Requirements
+## 📊 Expected Data Format
 
-See `requirements.txt` for the complete list of dependencies:
-- streamlit - Web application framework
-- pandas - Data processing
-- plotly - Visualization library
-- openpyxl - Excel file support
+The app expects MGNREGA Excel/CSV files with:
+- Header rows starting from row 4 (rows 1-3 skipped)
+- Column 4: Panchayat
+- Column 5: Financial Year
+- Column 6: Work Status
+- Column 7: Work Code
+- Column 8: Work Name
+- Column 12: Work Type
+- Column 16: Sanctioned Amount
+- Column 23: Wages Paid
+- Column 24: Material Paid
 
-## Performance & Health
+## 🛠️ Technology Stack
 
-- **Default Port (Local):** 8501
-- **Docker Port:** 3737
-- **Health Check:** Container includes automated health checks
+- **Streamlit**: Web framework
+- **Pandas**: Data manipulation
+- **Plotly**: Interactive visualizations
+- **XlsxWriter**: Professional Excel export
+- **OpenPyxl**: Excel file reading
 
-## Data Format Requirements
+## 📝 Dependencies
 
-The application expects MGNREGA reports with a specific structure:
-- The first 3 rows are treated as headers/metadata and are skipped
-- Specific columns are extracted by index (column positions)
-- Numeric values are automatically converted with error handling
-- Missing or invalid data is handled gracefully with default values
+```
+streamlit
+pandas
+plotly
+openpyxl
+xlsxwriter
+```
 
-## Tips for Best Results
+## 🎨 UI Features
 
-1. **Data Quality** - Ensure your Excel/CSV file follows the standard MGNREGA format
-2. **File Size** - For optimal performance, work with files containing up to 10,000+ rows
-3. **Columns** - Verify that all required columns are present in your source file
-4. **Encoding** - Use UTF-8 encoding for CSV files with special characters
+- Modern, professional design with custom CSS
+- Responsive layout
+- Dark sidebar with light content area
+- Color-coded metrics and progress indicators
+- Gradient backgrounds for data tables
+- Card-based layout for work details
 
-## Known Limitations
+## 🔧 Configuration
 
-- File size is limited by Streamlit's default upload limits (200MB)
-- Very large datasets may take a few seconds to process
-- The dashboard is designed for MGNREGA report format specifically
+The app runs on port `3737` by default. To change:
 
-## Troubleshooting
+```bash
+streamlit run app.py --server.port=YOUR_PORT
+```
 
-**Issue: "Import Error" when running the app**
-- Solution: Ensure all dependencies are installed with `pip install -r requirements.txt`
+## 📸 Screenshots
 
-**Issue: File upload not working**
-- Solution: Verify the file is in Excel (.xlsx) or CSV format and follows the expected structure
+Upload your MGNREGA Excel/CSV file and get:
+- ✅ Instant KPIs
+- ✅ Interactive charts
+- ✅ Smart search
+- ✅ Individual work analytics
+- ✅ Professional Excel reports
 
-**Issue: Empty charts or no data displayed**
-- Solution: Check that the uploaded file contains the required columns in the expected positions
+## 🤝 Contributing
 
-## Docker Troubleshooting
+Pull requests are welcome. For major changes, please open an issue first.
 
-**Issue: Port 3737 already in use**
-- Solution: Modify the port mapping in `docker-compose.yml` or stop the conflicting service
+## 📜 License
 
-**Issue: Container exits immediately**
-- Solution: Check logs with `docker-compose logs` to identify the issue
+MIT
 
-## Future Enhancements
+## 👤 Author
 
-- [ ] Support for additional report formats
-- [ ] Export to PDF/Excel functionality
-- [ ] Data caching for improved performance
-- [ ] Custom date range filtering
-- [ ] Advanced analytics and forecasting
-- [ ] User authentication
-- [ ] Multi-file batch processing
-
-## Support & Contribution
-
-For issues, suggestions, or contributions, please reach out or create an issue in the repository.
-
-## License
-
-This project is provided as-is for internal use.
+**Rajat Poddar**
+- GitHub: [@rajatpoddar](https://github.com/rajatpoddar)
 
 ---
 
-**Last Updated:** 2026  
-**Version:** 1.0.0  
-**Status:** Active Development
+**Made with ❤️ for MGNREGA data analysis**
