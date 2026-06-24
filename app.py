@@ -542,7 +542,7 @@ if uploaded_file:
         "🧱 Material Oriented",
     ])
 
-    def styled_table(data: pd.DataFrame):
+    def styled_table(data: pd.DataFrame, tab_key: str):
         if data.empty:
             st.info("Is category mein koi record nahi hai.")
             return
@@ -562,29 +562,29 @@ if uploaded_file:
         st.download_button(
             "⬇️ Download this tab as Excel",
             data=excel_tab,
-            file_name="report_export.xlsx",
+            file_name=f"report_{tab_key}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            key=f"dl_{id(data)}",
+            key=f"dl_{tab_key}",
         )
 
     with tab_all:
-        styled_table(df_filtered)
+        styled_table(df_filtered, "all")
 
     with tab_zero:
-        styled_table(df_filtered[df_filtered["Total_Paid"] == 0])
+        styled_table(df_filtered[df_filtered["Total_Paid"] == 0], "zero_paid")
 
     with tab_low:
-        styled_table(df_filtered[(df_filtered["Progress_%"] > 0) & (df_filtered["Progress_%"] < 10)])
+        styled_table(df_filtered[(df_filtered["Progress_%"] > 0) & (df_filtered["Progress_%"] < 10)], "low_progress")
 
     with tab_high:
-        styled_table(df_filtered[df_filtered["Progress_%"] > 85])
+        styled_table(df_filtered[df_filtered["Progress_%"] > 85], "high_progress")
 
     with tab_old:
         recent_years = ["2023-2024", "2024-2025", "2025-2026", "2026-2027"]
-        styled_table(df_filtered[~df_filtered["Fin_Year"].isin(recent_years)])
+        styled_table(df_filtered[~df_filtered["Fin_Year"].isin(recent_years)], "old_schemes")
 
     with tab_mat:
-        styled_table(df_filtered[df_filtered["Material_Paid"] > 0])
+        styled_table(df_filtered[df_filtered["Material_Paid"] > 0], "material")
 
 else:
     st.markdown("""
