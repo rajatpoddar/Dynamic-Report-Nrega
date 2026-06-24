@@ -19,12 +19,12 @@ st.set_page_config(
 # ─────────────────────────────────────────────
 st.markdown("""
 <style>
-/* General background */
-[data-testid="stAppViewContainer"] { background: #f0f2f6; }
-[data-testid="stSidebar"] { background: #1a2340; }
-[data-testid="stSidebar"] * { color: #e0e6f0 !important; }
+/* General background - Light Theme */
+[data-testid="stAppViewContainer"] { background: #f5f7fa; }
+[data-testid="stSidebar"] { background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%); }
+[data-testid="stSidebar"] * { color: #ffffff !important; }
 [data-testid="stSidebar"] .stSelectbox label,
-[data-testid="stSidebar"] .stTextInput label { color: #b0bcd4 !important; font-size: 0.8rem; text-transform: uppercase; letter-spacing: .05em; }
+[data-testid="stSidebar"] .stTextInput label { color: #dbeafe !important; font-size: 0.8rem; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
 
 /* Metric cards */
 div[data-testid="metric-container"] {
@@ -32,15 +32,17 @@ div[data-testid="metric-container"] {
     border-radius: 12px;
     padding: 16px 20px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    border-left: 4px solid #3b6fd4;
+    border-left: 4px solid #1e40af;
 }
+div[data-testid="metric-container"] label { color: #64748b !important; font-size: 0.78rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.05em; }
+div[data-testid="metric-container"] div[data-testid="stMetricValue"] { color: #1e3a8a !important; font-size: 1.8rem !important; font-weight: 700 !important; }
 
 /* Tab styling */
 button[data-baseweb="tab"] { font-weight: 600; font-size: 0.82rem; }
 
 /* Section headings */
-h3 { color: #1a2340 !important; }
-h4 { color: #2c3e6b !important; }
+h3 { color: #1e3a8a !important; }
+h4 { color: #1e40af !important; }
 
 /* Table / dataframe */
 [data-testid="stDataFrame"] { border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
@@ -63,7 +65,7 @@ h4 { color: #2c3e6b !important; }
 
 /* Download button */
 .stDownloadButton > button {
-    background: linear-gradient(135deg, #1a2340, #3b6fd4);
+    background: linear-gradient(135deg, #1e3a8a, #1e40af);
     color: white !important;
     border: none;
     border-radius: 8px;
@@ -267,7 +269,7 @@ if uploaded_file:
                 color_discrete_sequence=px.colors.qualitative.Pastel,
             )
             fig_pie.update_layout(margin=dict(t=10, b=10), legend_font_size=11)
-            st.plotly_chart(fig_pie, use_container_width=True)
+            st.plotly_chart(fig_pie, width='stretch')
         else:
             st.info(f"Only one type: **{wc['Work_Type'].iloc[0]}**")
 
@@ -280,7 +282,7 @@ if uploaded_file:
             color="Fin_Year", color_discrete_sequence=px.colors.sequential.Blues_r,
         )
         fig_bar.update_layout(showlegend=False, margin=dict(t=10, b=10))
-        st.plotly_chart(fig_bar, use_container_width=True)
+        st.plotly_chart(fig_bar, width='stretch')
 
     # ── Charts Row 2 ─────────────────────────────────────────
     cc3, cc4 = st.columns(2)
@@ -292,7 +294,7 @@ if uploaded_file:
             color="Count", color_continuous_scale="Blues",
         )
         fig_pwh.update_layout(margin=dict(t=10, b=10), coloraxis_showscale=False)
-        st.plotly_chart(fig_pwh, use_container_width=True)
+        st.plotly_chart(fig_pwh, width='stretch')
 
     with cc4:
         st.markdown("#### 💰 Sanctioned vs Paid Amount (by Panchayat)")
@@ -304,7 +306,7 @@ if uploaded_file:
         fig_amt.add_trace(go.Bar(name="Sanctioned", x=amt["Panchayat"], y=amt["Sanctioned"], marker_color="#3b6fd4"))
         fig_amt.add_trace(go.Bar(name="Paid", x=amt["Panchayat"], y=amt["Paid"], marker_color="#43c59e"))
         fig_amt.update_layout(barmode="group", margin=dict(t=10, b=10), legend_font_size=11)
-        st.plotly_chart(fig_amt, use_container_width=True)
+        st.plotly_chart(fig_amt, width='stretch')
 
     # ── Progress Distribution ─────────────────────────────────
     st.markdown("#### 🎯 Progress % Distribution Across Works")
@@ -314,7 +316,7 @@ if uploaded_file:
         labels={"Progress_%": "Progress (%)"},
     )
     fig_hist.update_layout(margin=dict(t=10, b=10))
-    st.plotly_chart(fig_hist, use_container_width=True)
+    st.plotly_chart(fig_hist, width='stretch')
 
     st.markdown("---")
 
@@ -324,7 +326,7 @@ if uploaded_file:
     st.markdown("### 🔎 Search Works — by Work Name or Work Code")
 
     search_query = st.text_input(
-        "", placeholder="Type work name or work code (partial search works)...",
+        "Search Works", placeholder="Type work name or work code (partial search works)...",
         label_visibility="collapsed"
     )
 
@@ -348,7 +350,7 @@ if uploaded_file:
                     "Total_Paid": "₹{:,.0f}",
                     "Progress_%": "{:.2f}%",
                 }).background_gradient(subset=["Progress_%"], cmap="RdYlGn"),
-                use_container_width=True,
+                width='stretch',
             )
 
             st.markdown("---")
@@ -425,7 +427,7 @@ if uploaded_file:
                     title={"text": "Progress %"},
                 ))
                 fig_gauge.update_layout(height=280, margin=dict(t=30, b=10, l=10, r=10))
-                st.plotly_chart(fig_gauge, use_container_width=True)
+                st.plotly_chart(fig_gauge, width='stretch')
 
             with wa2:
                 # Expenditure breakdown pie
@@ -439,7 +441,7 @@ if uploaded_file:
                     title="Expenditure Breakdown",
                 )
                 fig_exp.update_layout(height=280, margin=dict(t=40, b=10))
-                st.plotly_chart(fig_exp, use_container_width=True)
+                st.plotly_chart(fig_exp, width='stretch')
 
             # Compare with panchayat avg
             same_panchayat = df_filtered[df_filtered["Panchayat"] == row["Panchayat"]]
@@ -462,7 +464,7 @@ if uploaded_file:
                     margin=dict(t=40, b=10),
                     height=260,
                 )
-                st.plotly_chart(fig_cmp, use_container_width=True)
+                st.plotly_chart(fig_cmp, width='stretch')
 
             with wa4:
                 # Budget utilisation bar
@@ -481,7 +483,7 @@ if uploaded_file:
                     margin=dict(t=40, b=10),
                     height=260,
                 )
-                st.plotly_chart(fig_util, use_container_width=True)
+                st.plotly_chart(fig_util, width='stretch')
 
         else:
             st.warning("Koi result nahi mila. Dusra keyword try karein.")
@@ -517,7 +519,7 @@ if uploaded_file:
             data.reset_index(drop=True).style
                 .format(fmt_dict)
                 .background_gradient(subset=["Progress_%"] if "Progress_%" in data.columns else [], cmap="RdYlGn"),
-            use_container_width=True,
+            width='stretch',
         )
         # Per-tab Excel download
         excel_tab = export_excel(data.reset_index(drop=True))
