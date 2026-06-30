@@ -19,9 +19,22 @@ st.set_page_config(
 # ─────────────────────────────────────────────
 st.markdown("""
 <style>
+/* Force light theme regardless of system/deployment settings */
+html, body, [class*="css"] { color-scheme: light !important; }
+
 /* General background - Light Theme */
-[data-testid="stAppViewContainer"] { background: #f5f7fa; }
-[data-testid="stSidebar"] { background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%); }
+[data-testid="stAppViewContainer"] { background: #f5f7fa !important; }
+[data-testid="stHeader"] { background: #f5f7fa !important; }
+[data-testid="stMainBlockContainer"] { background: #f5f7fa !important; }
+[data-testid="stMain"] { background: #f5f7fa !important; }
+.main .block-container { background: #f5f7fa !important; }
+
+/* Main area default text color */
+[data-testid="stAppViewContainer"] p,
+[data-testid="stAppViewContainer"] span:not([data-testid="stSidebar"] span),
+[data-testid="stAppViewContainer"] div { color: #1e293b; }
+
+[data-testid="stSidebar"] { background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%) !important; }
 
 /* Sidebar – headings, plain text, labels → white */
 [data-testid="stSidebar"] p,
@@ -57,6 +70,19 @@ st.markdown("""
 [data-testid="stSidebar"] [data-baseweb="select"] div[class*="placeholder"],
 [data-testid="stSidebar"] [data-baseweb="select"] div[class*="singleValue"] {
     color: #1e293b !important;
+}
+
+/* Multiselect tags (selected items chips) */
+[data-testid="stSidebar"] [data-baseweb="tag"] {
+    background-color: #dbeafe !important;
+    border-radius: 6px !important;
+}
+[data-testid="stSidebar"] [data-baseweb="tag"] span {
+    color: #1e3a8a !important;
+    font-weight: 600 !important;
+}
+[data-testid="stSidebar"] [data-baseweb="tag"] svg {
+    fill: #1e3a8a !important;
 }
 
 /* Dropdown arrow icon */
@@ -122,8 +148,14 @@ hr { border-color: #dde3ee; }
 # ─────────────────────────────────────────────
 col_hd1, col_hd2 = st.columns([3, 1])
 with col_hd1:
-    st.markdown("## 📊 MGNREGA Schemes & Works Dashboard")
-    st.caption("Upload your Excel / CSV report to generate professional, dynamic insights instantly.")
+    st.markdown(
+        '<h2 style="color:#1e3a8a;">📊 MGNREGA Schemes & Works Dashboard</h2>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<p style="color:#64748b; margin-top:-10px;">Upload your Excel / CSV report to generate professional, dynamic insights instantly.</p>',
+        unsafe_allow_html=True,
+    )
 with col_hd2:
     uploaded_file = st.file_uploader("Upload Excel / CSV", type=["csv", "xlsx"], label_visibility="collapsed")
 
@@ -257,26 +289,37 @@ if uploaded_file:
     # ── Sidebar Filters ──────────────────────────────────────
     st.sidebar.markdown("## 🔍 Filters")
 
-    selected_panchayat = st.sidebar.selectbox(
-        "Panchayat", ["All"] + sorted(df["Panchayat"].unique().tolist())
+    all_panchayats = sorted(df["Panchayat"].unique().tolist())
+    selected_panchayat = st.sidebar.multiselect(
+        "Panchayat (multiple select kar sakte ho)",
+        options=all_panchayats,
+        default=[],
+        placeholder="All Panchayats",
     )
+
     selected_work_type = st.sidebar.selectbox(
         "Work Type / Scheme", ["All"] + sorted(df["Work_Type"].unique().tolist())
     )
-    selected_fin_year = st.sidebar.selectbox(
-        "Financial Year", ["All"] + sorted(df["Fin_Year"].unique().tolist(), reverse=True)
+
+    all_fin_years = sorted(df["Fin_Year"].unique().tolist(), reverse=True)
+    selected_fin_year = st.sidebar.multiselect(
+        "Financial Year (multiple select kar sakte ho)",
+        options=all_fin_years,
+        default=[],
+        placeholder="All Financial Years",
     )
+
     selected_status = st.sidebar.selectbox(
         "Work Status", ["All"] + sorted(df["Work_Status"].unique().tolist())
     )
 
     df_filtered = df.copy()
-    if selected_panchayat != "All":
-        df_filtered = df_filtered[df_filtered["Panchayat"] == selected_panchayat]
+    if selected_panchayat:  # list non-empty means filter applied
+        df_filtered = df_filtered[df_filtered["Panchayat"].isin(selected_panchayat)]
     if selected_work_type != "All":
         df_filtered = df_filtered[df_filtered["Work_Type"] == selected_work_type]
-    if selected_fin_year != "All":
-        df_filtered = df_filtered[df_filtered["Fin_Year"] == selected_fin_year]
+    if selected_fin_year:  # list non-empty means filter applied
+        df_filtered = df_filtered[df_filtered["Fin_Year"].isin(selected_fin_year)]
     if selected_status != "All":
         df_filtered = df_filtered[df_filtered["Work_Status"] == selected_status]
 
@@ -433,6 +476,37 @@ if uploaded_file:
             progress = float(row["Progress_%"])
             badge = progress_badge(progress)
 
+            # ── Mandays & Material Calculations ───────────────────
+            RATE_PER_MANDAY          = 282   # ₹ per manday (wage rate)
+            DAYS_PER_WEEK            = 6     # MR generated for 6 days
+            MAX_LABOUR_PER_WK        = 15    # max 15 labour per yojana per week
+            wage_per_week_per_labour = RATE_PER_MANDAY * DAYS_PER_WEEK  # ₹1,692
+
+            sanctioned    = float(row["Sanctioned_Amount"])
+            wages_paid    = float(row["Wages_Paid"])
+            material_paid = float(row["Material_Paid"])
+            total_paid    = float(row["Total_Paid"])
+            remaining     = max(0.0, sanctioned - total_paid)
+
+            # ── Wages calculations ─────────────────────────────
+            wages_budget_total     = sanctioned * 0.60           # ~60% of sanctioned is wages
+            budget_for_wages_remaining = max(0.0, wages_budget_total - wages_paid)
+            total_remaining_mandays    = int(budget_for_wages_remaining / RATE_PER_MANDAY) if budget_for_wages_remaining > 0 else 0
+
+            cost_1wk_max = MAX_LABOUR_PER_WK * wage_per_week_per_labour  # 15×1692 = ₹25,380
+            if budget_for_wages_remaining >= cost_1wk_max:
+                feasible_labour_this_week = MAX_LABOUR_PER_WK
+            elif budget_for_wages_remaining >= wage_per_week_per_labour:
+                feasible_labour_this_week = int(budget_for_wages_remaining / wage_per_week_per_labour)
+            else:
+                feasible_labour_this_week = 0
+
+            # ── Material calculations ──────────────────────────
+            material_budget_total     = sanctioned * 0.40        # ~40% of sanctioned is material
+            material_remaining        = max(0.0, material_budget_total - material_paid)
+            material_utilisation_pct  = (material_paid / material_budget_total * 100) if material_budget_total > 0 else 0
+            has_material              = material_paid > 0 or material_budget_total > 0
+
             # Detail Card
             st.markdown(f"""
             <div class="work-detail-card">
@@ -467,6 +541,139 @@ if uploaded_file:
                 </div>
             </div>
             """, unsafe_allow_html=True)
+
+            # ── Mandays & Labour Demand Card ───────────────────
+            st.markdown("""
+            <style>
+            .manday-card {
+                background: linear-gradient(135deg, #eef4ff 0%, #f0fdf4 100%);
+                border-radius: 14px;
+                padding: 22px 28px;
+                box-shadow: 0 4px 16px rgba(59,111,212,0.10);
+                border-top: 4px solid #16a34a;
+                margin-bottom: 20px;
+            }
+            .manday-card h4 { color: #14532d; margin-bottom: 6px; font-size: 1.05rem; }
+            .manday-card .note { color: #6b7a99; font-size: 0.82rem; margin-bottom: 14px; }
+            .material-card {
+                background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%);
+                border-radius: 14px;
+                padding: 22px 28px;
+                box-shadow: 0 4px 16px rgba(234,179,8,0.10);
+                border-top: 4px solid #d97706;
+                margin-bottom: 20px;
+            }
+            .material-card h4 { color: #92400e; margin-bottom: 6px; font-size: 1.05rem; }
+            .material-card .note { color: #6b7a99; font-size: 0.82rem; margin-bottom: 14px; }
+            .md-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 14px; }
+            .md-box { flex: 1; min-width: 130px; background: white; border-radius: 10px;
+                      padding: 12px 14px; text-align: center;
+                      box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+            .md-box .mval { font-size: 1.25rem; font-weight: 700; color: #1e40af; }
+            .md-box .mlbl { font-size: 0.70rem; color: #8898aa; text-transform: uppercase;
+                            letter-spacing: .05em; margin-top: 2px; }
+            .md-box-amber .mval { font-size: 1.25rem; font-weight: 700; color: #b45309; }
+            .warn-box { background: #fefce8; border-left: 4px solid #eab308;
+                        border-radius: 8px; padding: 10px 14px; font-size: 0.83rem;
+                        color: #713f12; margin-top: 10px; }
+            .ok-box   { background: #f0fdf4; border-left: 4px solid #16a34a;
+                        border-radius: 8px; padding: 10px 14px; font-size: 0.83rem;
+                        color: #14532d; margin-top: 10px; }
+            .info-box  { background: #eff6ff; border-left: 4px solid #3b82f6;
+                        border-radius: 8px; padding: 10px 14px; font-size: 0.83rem;
+                        color: #1e3a8a; margin-top: 10px; }
+            </style>
+            """, unsafe_allow_html=True)
+
+            # ── Labour status message ──────────────────────────
+            if feasible_labour_this_week == 0:
+                status_box = '<div class="warn-box">⚠️ <strong>Wages budget exhausted</strong> — Is yojana mein is hafte labour demand nahi kiya ja sakta. Sanctioned amount review karein.</div>'
+            elif feasible_labour_this_week < MAX_LABOUR_PER_WK:
+                status_box = f'<div class="warn-box">⚠️ <strong>Partial demand possible</strong> — Remaining wages budget ke hisab se sirf <strong>{feasible_labour_this_week} labour</strong> hi is hafte demand kiye ja sakte hain (max 15 se kam).</div>'
+            else:
+                status_box = f'<div class="ok-box">✅ <strong>Full demand possible</strong> — Is hafte <strong>15 labour (max cap)</strong> demand kiye ja sakte hain.</div>'
+
+            # ── Wages Card ─────────────────────────────────────
+            st.markdown(f"""
+            <div class="manday-card">
+                <h4>👷 Mandays &amp; Labour Demand Analysis</h4>
+                <div class="note">
+                    Wage Rate: ₹282/manday &nbsp;|&nbsp; MR: 6 days/week &nbsp;|&nbsp;
+                    1 labour/week = 6 × ₹282 = <strong>₹1,692</strong> &nbsp;|&nbsp;
+                    Max labour per yojana/week = <strong>15</strong>
+                </div>
+                <div class="md-row">
+                    <div class="md-box">
+                        <div class="mval">{fmt_inr(wages_budget_total)}</div>
+                        <div class="mlbl">Total Wages Budget<br><span style="font-size:0.65rem;">(~60% of Sanctioned)</span></div>
+                    </div>
+                    <div class="md-box">
+                        <div class="mval">{fmt_inr(wages_paid)}</div>
+                        <div class="mlbl">Wages Paid So Far</div>
+                    </div>
+                    <div class="md-box">
+                        <div class="mval">{fmt_inr(budget_for_wages_remaining)}</div>
+                        <div class="mlbl">Wages Budget Left</div>
+                    </div>
+                    <div class="md-box">
+                        <div class="mval">{total_remaining_mandays:,}</div>
+                        <div class="mlbl">Remaining Mandays<br><span style="font-size:0.65rem;">(Wages Left ÷ ₹282)</span></div>
+                    </div>
+                    <div class="md-box">
+                        <div class="mval">{feasible_labour_this_week}</div>
+                        <div class="mlbl">Labour Demand This Week<br><span style="font-size:0.65rem;">(Max cap: 15)</span></div>
+                    </div>
+                </div>
+                {status_box}
+            </div>
+            """, unsafe_allow_html=True)
+
+            # ── Material Card (only if material is applicable) ──
+            if has_material:
+                if material_remaining <= 0:
+                    mat_status = '<div class="warn-box">⚠️ <strong>Material budget exhausted</strong> — Material ka poora budget kharach ho chuka hai.</div>'
+                elif material_utilisation_pct < 10:
+                    mat_status = f'<div class="warn-box">⚠️ <strong>Material barely started</strong> — Sirf {material_utilisation_pct:.1f}% material budget use hua hai. Kaam shuru karna hoga.</div>'
+                elif material_utilisation_pct >= 85:
+                    mat_status = f'<div class="ok-box">✅ <strong>Material near completion</strong> — {material_utilisation_pct:.1f}% material budget utilize ho gaya hai.</div>'
+                else:
+                    mat_status = f'<div class="info-box">🧱 Material kaam chal raha hai — {material_utilisation_pct:.1f}% utilize hua, {fmt_inr(material_remaining)} abhi baaki hai.</div>'
+
+                st.markdown(f"""
+                <div class="material-card">
+                    <h4>🧱 Material Budget Analysis</h4>
+                    <div class="note">
+                        Material component = ~40% of Sanctioned Amount &nbsp;|&nbsp;
+                        Jis yojana mein material nahi hota wahan ye section relevant nahi hoga
+                    </div>
+                    <div class="md-row">
+                        <div class="md-box">
+                            <div class="mval" style="color:#b45309;">{fmt_inr(material_budget_total)}</div>
+                            <div class="mlbl">Total Material Budget<br><span style="font-size:0.65rem;">(~40% of Sanctioned)</span></div>
+                        </div>
+                        <div class="md-box">
+                            <div class="mval" style="color:#b45309;">{fmt_inr(material_paid)}</div>
+                            <div class="mlbl">Material Paid So Far</div>
+                        </div>
+                        <div class="md-box">
+                            <div class="mval" style="color:#b45309;">{fmt_inr(material_remaining)}</div>
+                            <div class="mlbl">Material Budget Left</div>
+                        </div>
+                        <div class="md-box">
+                            <div class="mval" style="color:#b45309;">{material_utilisation_pct:.1f}%</div>
+                            <div class="mlbl">Material Utilisation</div>
+                        </div>
+                    </div>
+                    {mat_status}
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                <div style="background:#f8fafc; border-radius:10px; padding:12px 18px;
+                            border-left:4px solid #cbd5e1; margin-bottom:16px; color:#64748b; font-size:0.85rem;">
+                    🧱 <strong>Material N/A</strong> — Is yojana mein abhi tak koi material expenditure nahi hua hai.
+                </div>
+                """, unsafe_allow_html=True)
 
             # Mini analytics charts for the selected work
             wa1, wa2 = st.columns(2)
@@ -617,8 +824,8 @@ if uploaded_file:
 else:
     st.markdown("""
     <div style="text-align:center; padding: 60px 20px;">
-        <h2 style="color:#3b6fd4;">📂 Upload your Excel / CSV file</h2>
-        <p style="color:#6b7a99; font-size:1.1rem;">
+        <h2 style="color:#3b6fd4 !important;">📂 Upload your Excel / CSV file</h2>
+        <p style="color:#6b7a99 !important; font-size:1.1rem;">
             MGNREGA report upload karein — professional analytics instantly dikhega.<br>
             Supported formats: <strong>.xlsx</strong> &nbsp;|&nbsp; <strong>.csv</strong>
         </p>
